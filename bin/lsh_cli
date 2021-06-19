@@ -19,6 +19,7 @@ prograrm.version(
   Printer.default.fromString(txt) + '\n' + '泽哥教我写的脚手架',
   '-v,--version'
 );
+
 prograrm.option('-i,--init', '🐶 初始化项目');
 
 const downloadPromise = function (spinner, _dirname, _projectPath) {
