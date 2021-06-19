@@ -1,0 +1,177 @@
+#!/usr/bin/env node
+const Printer = require('@darkobits/lolcatjs');
+const figlet = require('figlet');
+const prograrm = require('commander');
+const inquirer = require('inquirer');
+const userHome = require('user-home');
+const shell = require('shelljs');
+const ora = require('ora');
+const download = require('download-git-repo');
+const tempUrl = 'direct:https://github.com/liushuhao23/vue-.git';
+const fs = require('fs');
+const txt = figlet.textSync('LSH_CLI', {
+  font: 'Ghost',
+  horizontalLayout: 'default',
+  width: 80,
+  whitespaceBreak: true,
+});
+prograrm.version(
+  Printer.default.fromString(txt) + '\n' + '泽哥教我写的脚手架',
+  '-v,--version'
+);
+prograrm.option('-i,--init', '🐶 初始化项目');
+
+const downloadPromise = function (spinner, _dirname, _projectPath) {
+  return new Promise((r, j) => {
+    download(tempUrl, _projectPath, { clone: true }, (err) => {
+      spinner.stop();
+      console.log(err, ';');
+      if (err) {
+        console.log('cli 服务启动失败，');
+        j('cli 服务启动失败');
+      } else {
+        shell.sed('-i', 'vue2', _dirname, _projectPath + '/package.json');
+        r(true);
+      }
+    });
+  });
+};
+
+const finaly = function () {
+  const _dirname = answers.dirname;
+  if (_dirname) {
+    const spinner = ora('⏰, download template');
+    spinner.start();
+    const _pwd = shell.pwd().stdout;
+    const _projectPath = `${_pwd}/${_dirname}`;
+    shell.cd(_pwd);
+    shell.rm('-rf', _projectPath);
+    shell.mkdir(_dirname);
+    const downResult = downloadPromise(spinner, _dirname, _projectPath);
+    downResult.catch((err) => console.log(err, 'err'));
+    // let data = fs.readFileSync( `${_projectPath}/package.json`, 'utf8').split(/\r\n|\n|\r/gm);
+    // const appendArr = [
+    //   '    "less": "^3.0.4",',
+    //   '    "less-loader": "^5.0.0",',
+    // ];
+    // data.splice(data.length - 5, 0, ...appendArr);
+    // fs.writeFileSync(`${_projectPath}/package.json`, data.join('\r\n'))
+  }
+};
+const rely = async function (data) {
+  let { rely } = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      message:
+        '请选择你需要的项目依赖',
+      name: 'rely',
+      choices: [
+        {
+          name: 'vue 版本',
+          checked: true, // 默认选中
+          value: 'versions'
+        },
+        {
+          name: 'babel',
+          checked: true, // 默认选中
+          value: 'babel'
+        },
+        {
+          name: 'TypeScript',
+          value: 'TypeScript'
+        },
+        {
+          name: 'Router',
+          value: 'Router'
+        },
+        {
+          name: 'Vuex',
+          value: 'Vuex'
+        },
+        {
+          name: 'CSS Pre-processors',
+          value: 'CSS'
+        },
+        {
+          name: 'Linter / Formatter',
+          value: 'Linter'
+        },
+      ],
+    },
+    // {
+    //   type: 'list',
+    //   message: '请选择css Pre-processors',
+    //   choices: ['√ less', '√ Sass/SCSS (with dart-sass)', '√ Sass/SCSS (with node-sass)', '√ Stylus'],
+    //   name: 'PreProcessors',
+    // },
+  ]);
+  console.log(data, 'data');
+  console.log(rely, 'rely');
+};
+
+const versions = async function(data) {
+  let { version } = await inquirer.prompt([
+    {
+      type: 'list',
+      message: '请选择vue 语言版本',
+      choices: [
+        {
+          name: '√ vue2 基础模板',
+          value: 'vue2'
+        },
+        {
+          name: '√ vue3 基础模板',
+          value: 'vue3'
+        }],
+      name: 'version',
+    },
+    // {
+    //   type: 'list',
+    //   message: '请选择css Pre-processors',
+    //   choices: ['√ less', '√ Sass/SCSS (with dart-sass)', '√ Sass/SCSS (with node-sass)', '√ Stylus'],
+    //   name: 'PreProcessors',
+    // },
+  ]);
+  rely({
+    dirname: data,
+    version
+  })
+}
+const fileName = async function () {
+  let {dirname } = await inquirer.prompt([
+      {
+        type: 'text',
+        message: '请输入文件名称',
+        name: 'dirname',
+      },
+      // {
+      //   type: 'list',
+      //   message: '请选择css Pre-processors',
+      //   choices: ['√ less', '√ Sass/SCSS (with dart-sass)', '√ Sass/SCSS (with node-sass)', '√ Stylus'],
+      //   name: 'PreProcessors',
+      // },
+    ])
+    if (dirname) {
+      versions({dirname})
+    } else {
+      console.log('请输入文件名称');
+    }
+};
+const bandHandler = {
+  init: () => {
+    fileName();
+  },
+};
+prograrm
+  .usage('<cmd> [env]')
+  .arguments('<cmd> [env]')
+  .action(function (cmd, otherParms) {
+    const hander = bandHandler[cmd];
+    if (hander) {
+      hander(otherParms);
+    } else {
+      console.log('暂未实现' + cmd);
+    }
+  });
+
+prograrm.parse(process.argv);
